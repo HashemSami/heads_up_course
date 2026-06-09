@@ -18,6 +18,21 @@ defmodule HeadsUpWeb.CustomComponents do
     """
   end
 
+  slot :inner_block, required: true
+  slot :tagline
+
   def head_line(assigns) do
+    assigns = assign_new(assigns, :vibe, fn -> ~w(😎 🤩 🥳) |> Enum.random() end)
+
+    ~H"""
+    <div class="headline">
+      <h1>
+        {render_slot(@inner_block)}
+      </h1>
+      <div class="tagline">
+        {render_slot(@tagline, @vibe)}
+      </div>
+    </div>
+    """
   end
 end

@@ -6,7 +6,8 @@ defmodule HeadsUpWeb.IncidentLive.Index do
   def mount(_params, _session, socket) do
     socket =
       assign(socket,
-        incidents: HeadsUp.Incidents.list_incidents()
+        incidents: HeadsUp.Incidents.list_incidents(),
+        page_title: "Incidents"
       )
 
     {:ok, socket}
@@ -16,6 +17,13 @@ defmodule HeadsUpWeb.IncidentLive.Index do
     ~H"""
     <Layouts.app flash={@flash}>
       <div class="incident-index">
+        <.head_line>
+          <.icon name="hero-trophy-mini" /> 25 Incidents Resolved This Month!
+          <:tagline :let={vibe}>
+            Thanks for pitching in. {vibe}
+          </:tagline>
+        </.head_line>
+
         <div class="incidents">
           <.incident_card :for={incident <- @incidents} incident={incident} />
         </div>
