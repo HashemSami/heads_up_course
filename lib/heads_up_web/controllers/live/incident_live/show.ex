@@ -14,6 +14,7 @@ defmodule HeadsUpWeb.IncidentLive.Show do
       socket
       |> assign(incident: incident)
       |> assign(page_title: incident.name)
+      |> assign(:urgent_incidents, Incidents.urgent_incidents(incident))
 
     {:noreply, socket}
   end
@@ -26,17 +27,40 @@ defmodule HeadsUpWeb.IncidentLive.Show do
           <img src={@incident.image_path} alt="" />
           <section>
             <.badge status={@incident.status} />
-            <h2>{@incident.name}</h2>
-            <div class="priority">
-              Priority {@incident.priority}
-            </div>
+            <header>
+              <h2>{@incident.name}</h2>
+              <div class="priority">
+                Priority {@incident.priority}
+              </div>
+            </header>
             <div class="description">
               {@incident.description}
             </div>
           </section>
         </div>
+        <div class="activity">
+          <div class="left"></div>
+          <div class="right">
+            <.urgent_incidents incidents={@urgent_incidents} />
+          </div>
+        </div>
       </div>
     </Layouts.app>
+    """
+  end
+
+  def urgent_incidents(assigns) do
+    ~H"""
+    <section>
+      <h4>Urgent Incidents</h4>
+      <ul class="incidents">
+        <li :for={incident <- @incidents}>
+          <.link navigate={~p"/incidents/#{incident.id}"}>
+            <img src={incident.image_path} alt="" /> {incident.name}
+          </.link>
+        </li>
+      </ul>
+    </section>
     """
   end
 end

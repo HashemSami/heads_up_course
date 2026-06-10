@@ -51,6 +51,12 @@ defmodule HeadsUpWeb.Layouts do
             <a href="https://github.com/phoenixframework/phoenix" class="btn btn-ghost">GitHub</a>
           </li> --%>
           <li>
+            <.link navigate={~p"/incidents"}> Incidents </.link>
+          </li>
+          <li>
+            <.link navigate={~p"/effort"}> Effort </.link>
+          </li>
+          <li>
             <.theme_toggle />
           </li>
           <li>
