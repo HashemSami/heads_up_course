@@ -6,11 +6,13 @@ defmodule HeadsUpWeb.IncidentLive.Index do
   alias HeadsUp.Incidents.Incident
 
   def mount(_params, _session, socket) do
+    form = to_form(%{"q" => "", "status" => "", "sort_by" => ""})
+
     socket =
-      assign(socket,
-        page_title: "Incidents"
-      )
+      socket
+      |> assign(:page_title, "Incidents")
       |> stream(:incidents, Incidents.list_incidents())
+      |> assign(:form, form)
 
     socket =
       attach_hook(socket, :log_stream, :after_render, fn
@@ -33,6 +35,8 @@ defmodule HeadsUpWeb.IncidentLive.Index do
           </:tagline>
         </.head_line>
 
+        <.filter_form form={@form} />
+
         <div class="incidents" id="incidents" phx-update="stream">
           <.incident_card
             :for={{dom_id, incident} <- @streams.incidents}
@@ -42,6 +46,26 @@ defmodule HeadsUpWeb.IncidentLive.Index do
         </div>
       </div>
     </Layouts.app>
+    """
+  end
+
+  def filter_form(assigns) do
+    ~H"""
+    <.form for={@form}>
+      <.input field={@form[:q]} placeholder="Search..." autocomplete="off" />
+      <.input
+        type="select"
+        field={@form[:status]}
+        prompt="Status"
+        options={Incidents.git_status_options()}
+      />
+      <.input
+        type="select"
+        field={@form[:sort_by]}
+        prompt="Sort By"
+        options={[:priority, :name]}
+      />
+    </.form>
     """
   end
 

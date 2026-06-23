@@ -11,9 +11,21 @@ defmodule HeadsUp.Incidents do
     Repo.get!(Incident, id)
   end
 
+  def filter_incidents() do
+    Incident
+    |> where(status: :resolved)
+    |> where([i], ilike(i.name, "%in%"))
+    |> order_by(desc: :name)
+    |> Repo.all()
+  end
+
   # def get_incident(id) when is_binary(id) do
   #   id |> String.to_integer() |> get_incident()
   # end
+
+  def git_status_options() do
+    Ecto.Enum.values(Incident, :status)
+  end
 
   def urgent_incidents(incident) do
     list_incidents() |> List.delete(incident)
