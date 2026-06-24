@@ -11,12 +11,40 @@ defmodule HeadsUp.Incidents do
     Repo.get!(Incident, id)
   end
 
-  def filter_incidents() do
+  def filter_incidents(filter) do
     Incident
-    |> where(status: :resolved)
-    |> where([i], ilike(i.name, "%in%"))
-    |> order_by(desc: :name)
+    |> filter_by_status(filter["status"])
+    |> search_by(filter["q"])
+    |> sort(filter["sort_by"])
     |> Repo.all()
+  end
+
+  defp filter_by_status(query, status) when status in ~w(resolved pending canceled) do
+    where(query, status: ^status)
+  end
+
+  defp filter_by_status(query, _status), do: query
+
+  defp search_by(query, q) when q in ["", nil], do: query
+
+  defp search_by(query, q) do
+    where(query, [i], ilike(i.name, ^"%#{q}%"))
+  end
+
+  defp sort(query, "priority_desc") do
+    order_by(query, desc: :priority)
+  end
+
+  defp sort(query, "priority_asc") do
+    order_by(query, asc: :priority)
+  end
+
+  defp sort(query, "name") do
+    order_by(query, asc: :name)
+  end
+
+  defp sort(query, _sort) do
+    order_by(query, :id)
   end
 
   # def get_incident(id) when is_binary(id) do

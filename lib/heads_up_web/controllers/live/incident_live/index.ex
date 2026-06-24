@@ -14,12 +14,12 @@ defmodule HeadsUpWeb.IncidentLive.Index do
       |> stream(:incidents, Incidents.list_incidents())
       |> assign(:form, form)
 
-    socket =
-      attach_hook(socket, :log_stream, :after_render, fn
-        socket ->
-          IO.inspect(socket)
-          socket
-      end)
+    # socket =
+    #   attach_hook(socket, :log_stream, :handle_event, fn
+    #     socket ->
+    #       IO.inspect(socket)
+    #       socket
+    #   end)
 
     {:ok, socket}
   end
@@ -38,6 +38,9 @@ defmodule HeadsUpWeb.IncidentLive.Index do
         <.filter_form form={@form} />
 
         <div class="incidents" id="incidents" phx-update="stream">
+          <div id="empty" class="no-results only:block hidden">
+            No raffles found. Try changing your filters.
+          </div>
           <.incident_card
             :for={{dom_id, incident} <- @streams.incidents}
             incident={incident}
@@ -51,8 +54,8 @@ defmodule HeadsUpWeb.IncidentLive.Index do
 
   def filter_form(assigns) do
     ~H"""
-    <.form for={@form}>
-      <.input field={@form[:q]} placeholder="Search..." autocomplete="off" />
+    <.form for={@form} id="filter-form" phx-change="filter" phx-submit="filter">
+      <.input field={@form[:q]} placeholder="Search..." autocomplete="off" phx-debounce="1000" />
       <.input
         type="select"
         field={@form[:status]}
@@ -64,6 +67,11 @@ defmodule HeadsUpWeb.IncidentLive.Index do
         field={@form[:sort_by]}
         prompt="Sort By"
         options={[:priority, :name]}
+        options={[
+          "Priority: High to low": "priority_asc",
+          "Priority: Low to high": "priority_desc",
+          Name: "name"
+        ]}
       />
     </.form>
     """
@@ -77,7 +85,7 @@ defmodule HeadsUpWeb.IncidentLive.Index do
     <.link navigate={~p"/incidents/#{@incident.id}"} id={@id}>
       <div class="card">
         <img src={@incident.image_path} />
-        <h2>{@incident.description}</h2>
+        <h2>{@incident.name}</h2>
         <div class="details">
           <.badge status={@incident.status} class="" />
           <div class="priority">
@@ -87,5 +95,14 @@ defmodule HeadsUpWeb.IncidentLive.Index do
       </div>
     </.link>
     """
+  end
+
+  def handle_event("filter", unsigned_params, socket) do
+    socket =
+      socket
+      |> assign(:form, to_form(unsigned_params))
+      |> stream(:incidents, Incidents.filter_incidents(unsigned_params), reset: true)
+
+    {:noreply, socket}
   end
 end
