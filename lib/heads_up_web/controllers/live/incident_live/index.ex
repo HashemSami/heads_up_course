@@ -6,13 +6,9 @@ defmodule HeadsUpWeb.IncidentLive.Index do
   alias HeadsUp.Incidents.Incident
 
   def mount(_params, _session, socket) do
-    form = to_form(%{"q" => "", "status" => "", "sort_by" => ""})
-
     socket =
       socket
       |> assign(:page_title, "Incidents")
-      |> stream(:incidents, Incidents.list_incidents())
-      |> assign(:form, form)
 
     # socket =
     #   attach_hook(socket, :log_stream, :handle_event, fn
@@ -22,6 +18,18 @@ defmodule HeadsUpWeb.IncidentLive.Index do
     #   end)
 
     {:ok, socket}
+  end
+
+  def handle_params(unsigned_params, uri, socket) do
+    # form = to_form(%{"q" => "", "status" => "", "sort_by" => ""})
+
+    socket =
+      socket
+      |> assign(:page_title, "Incidents")
+      |> stream(:incidents, Incidents.filter_incidents(unsigned_params))
+      |> assign(:form, to_form(unsigned_params))
+
+    {:noreply, socket}
   end
 
   def render(assigns) do
@@ -73,6 +81,10 @@ defmodule HeadsUpWeb.IncidentLive.Index do
           Name: "name"
         ]}
       />
+
+      <.link navigate={~p"/incidents"}>
+        Reset
+      </.link>
     </.form>
     """
   end
@@ -97,11 +109,13 @@ defmodule HeadsUpWeb.IncidentLive.Index do
     """
   end
 
-  def handle_event("filter", unsigned_params, socket) do
-    socket =
-      socket
-      |> assign(:form, to_form(unsigned_params))
-      |> stream(:incidents, Incidents.filter_incidents(unsigned_params), reset: true)
+  def handle_event("filter", params, socket) do
+    params =
+      params
+      |> Map.take(~w(q status sort_by))
+      |> Map.reject(fn {_, v} -> v == "" end)
+
+    socket = push_navigate(socket, to: ~p"/incidents?#{params}")
 
     {:noreply, socket}
   end
