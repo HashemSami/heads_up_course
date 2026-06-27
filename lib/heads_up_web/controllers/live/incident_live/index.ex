@@ -20,13 +20,17 @@ defmodule HeadsUpWeb.IncidentLive.Index do
     {:ok, socket}
   end
 
-  def handle_params(unsigned_params, uri, socket) do
+  def handle_params(unsigned_params, _uri, socket) do
     # form = to_form(%{"q" => "", "status" => "", "sort_by" => ""})
+
+    # handle params is called in two scenarios
+    # - after the mount function
+    # - when ever we navigate in side the current live view use patch and push_patch
 
     socket =
       socket
       |> assign(:page_title, "Incidents")
-      |> stream(:incidents, Incidents.filter_incidents(unsigned_params))
+      |> stream(:incidents, Incidents.filter_incidents(unsigned_params), reset: true)
       |> assign(:form, to_form(unsigned_params))
 
     {:noreply, socket}
@@ -74,7 +78,6 @@ defmodule HeadsUpWeb.IncidentLive.Index do
         type="select"
         field={@form[:sort_by]}
         prompt="Sort By"
-        options={[:priority, :name]}
         options={[
           "Priority: High to low": "priority_asc",
           "Priority: Low to high": "priority_desc",
@@ -82,7 +85,7 @@ defmodule HeadsUpWeb.IncidentLive.Index do
         ]}
       />
 
-      <.link navigate={~p"/incidents"}>
+      <.link patch={~p"/incidents"}>
         Reset
       </.link>
     </.form>
@@ -115,7 +118,12 @@ defmodule HeadsUpWeb.IncidentLive.Index do
       |> Map.take(~w(q status sort_by))
       |> Map.reject(fn {_, v} -> v == "" end)
 
-    socket = push_navigate(socket, to: ~p"/incidents?#{params}")
+    # push navigate will render a new live view with different process and PID
+    # socket = push_navigate(socket, to: ~p"/incidents?#{params}")
+
+    # push patch will render a new live view but without starting a new process
+    # it will use the same process PID, and the mount function will not be invoked, only the handle params and the render function
+    socket = push_patch(socket, to: ~p"/incidents?#{params}")
 
     {:noreply, socket}
   end
