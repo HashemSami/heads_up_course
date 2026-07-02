@@ -56,7 +56,7 @@ defmodule HeadsUp.Incidents do
   end
 
   def urgent_incidents(incident) do
-    list_incidents() |> List.delete(incident)
+    Process.sleep(2000)
 
     Incident
     |> where(status: :pending)

@@ -14,7 +14,11 @@ defmodule HeadsUpWeb.IncidentLive.Show do
       socket
       |> assign(incident: incident)
       |> assign(page_title: incident.name)
-      |> assign(:urgent_incidents, Incidents.urgent_incidents(incident))
+      # |> assign(:urgent_incidents, Incidents.urgent_incidents(incident))
+      |> assign_async(:urgent_incidents, fn ->
+        {:ok, %{urgent_incidents: Incidents.urgent_incidents(incident)}}
+        # {:error, "out to lunch"}
+      end)
 
     {:noreply, socket}
   end
@@ -53,14 +57,47 @@ defmodule HeadsUpWeb.IncidentLive.Show do
     ~H"""
     <section>
       <h4>Urgent Incidents</h4>
-      <ul class="incidents">
-        <li :for={incident <- @incidents}>
-          <.link navigate={~p"/incidents/#{incident.id}"}>
-            <img src={incident.image_path} alt="" /> {incident.name}
-          </.link>
-        </li>
-      </ul>
+      <.async_result :let={result} assign={@incidents}>
+        <:loading>
+          <div class="loading">
+            <div class="spinner"></div>
+          </div>
+        </:loading>
+        <:failed :let={{:error, reason}}>
+          <div class="failed">
+            Async failed {reason}
+          </div>
+        </:failed>
+        <ul class="incidents">
+          <li :for={incident <- result}>
+            <.link navigate={~p"/incidents/#{incident.id}"}>
+              <img src={incident.image_path} alt="" /> {incident.name}
+            </.link>
+          </li>
+        </ul>
+      </.async_result>
     </section>
     """
   end
+
+  # def urgent_incidents(assigns) do
+  #   ~H"""
+  #   <section>
+  #     <h4>Urgent Incidents</h4>
+  #     <div :if={@incidents.loading} class="loading">
+  #       <div class="spinner"></div>
+  #     </div>
+  #     <div :if={@incidents.failed} class="failed">
+  #       Async failed
+  #     </div>
+  #     <ul :if={@incidents.ok?} class="incidents">
+  #       <li :for={incident <- @incidents.result}>
+  #         <.link navigate={~p"/incidents/#{incident.id}"}>
+  #           <img src={incident.image_path} alt="" /> {incident.name}
+  #         </.link>
+  #       </li>
+  #     </ul>
+  #   </section>
+  #   """
+  # end
 end
