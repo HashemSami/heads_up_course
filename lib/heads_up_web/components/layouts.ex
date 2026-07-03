@@ -57,6 +57,9 @@ defmodule HeadsUpWeb.Layouts do
             <.link navigate={~p"/effort"}> Effort </.link>
           </li>
           <li>
+            <.link navigate={~p"/admin/incidents"}> Admin </.link>
+          </li>
+          <li>
             <.theme_toggle />
           </li>
           <li>
