@@ -14,4 +14,30 @@ defmodule HeadsUp.Admin do
     |> Incident.changeset(attrs)
     |> Repo.insert()
   end
+
+  def get_incident!(id) do
+    # Incident
+    # |> where(id: ^id)
+    # |> Repo.one!()
+
+    Repo.get(Incident, id)
+  end
+
+  def update_incident(%Incident{} = incident, attrs) do
+    incident
+    |> Incident.changeset(attrs)
+    |> Repo.update()
+  end
+
+  def delete_incident(%Incident{} = incident) do
+    incident
+    |> Repo.delete()
+  end
+
+  # this function is used to validate the form for entering
+  # incident data
+  def change_incident(%Incident{} = incident, attrs \\ %{}) do
+    incident
+    |> Incident.changeset(attrs)
+  end
 end
