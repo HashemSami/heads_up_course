@@ -9,15 +9,20 @@ defmodule HeadsUp.Incidents.Incident do
     field :status, Ecto.Enum, values: [:pending, :resolved, :canceled], default: :pending
     field :image_path, :string, default: "/images/placeholder.jpg"
 
+    belongs_to :category, HeadsUp.Categories.Category
+
     timestamps(type: :utc_datetime)
   end
 
   @doc false
   def changeset(incident, attrs) do
     incident
-    |> cast(attrs, [:name, :description, :priority, :status, :image_path])
-    |> validate_required([:name, :description, :priority, :status, :image_path])
+    |> cast(attrs, [:name, :description, :priority, :status, :image_path, :category_id])
+    |> validate_required([:name, :description, :priority, :status, :image_path, :category_id])
     |> validate_length(:description, min: 10)
     |> validate_number(:priority, less_than_or_equal_to: 3)
+    # this will turn associations exceptions into a changeset errors
+    # to avoid the error at the sever level rather than the db level
+    |> assoc_constraint(:category)
   end
 end

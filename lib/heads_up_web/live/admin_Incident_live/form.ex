@@ -1,9 +1,13 @@
 defmodule HeadsUpWeb.AdminIncidentLive.Form do
+  alias HeadsUp.Categories
   alias HeadsUp.Incidents.Incident
   alias HeadsUp.Admin
   use HeadsUpWeb, :live_view
 
   def mount(_params, _session, socket) do
+    socket =
+      assign(socket, :category_options, get_category_names())
+
     {:ok, socket}
   end
 
@@ -41,11 +45,20 @@ defmodule HeadsUpWeb.AdminIncidentLive.Form do
 
       <.form for={@form} id="incident-form" phx-submit="save" phx-change="validate">
         <.input field={@form[:name]} label="Name" required />
+        <.input
+          field={@form[:category_id]}
+          label="Category"
+          type="select"
+          prompt="Choose the Category"
+          options={@category_options}
+        />
+
         <.input field={@form[:description]} type="textarea" label="Description" phx-debounce="blur" />
         <.input field={@form[:priority]} type="number" label="Priority" />
 
         <.input
           field={@form[:status]}
+          label="Status"
           type="select"
           prompt="Choose the status"
           options={[:resolved, :pending, :canceled]}
@@ -103,5 +116,9 @@ defmodule HeadsUpWeb.AdminIncidentLive.Form do
         socket = assign(socket, :form, to_form(changeset))
         {:noreply, socket}
     end
+  end
+
+  defp get_category_names() do
+    Categories.category_names_and_ids()
   end
 end

@@ -6,6 +6,7 @@ defmodule HeadsUp.Admin do
   def list_incidents do
     Incident
     |> order_by(desc: :inserted_at)
+    |> preload(:category)
     |> Repo.all()
   end
 
@@ -30,6 +31,8 @@ defmodule HeadsUp.Admin do
   end
 
   def delete_incident(%Incident{} = incident) do
+    Process.sleep(2000)
+
     incident
     |> Repo.delete()
   end

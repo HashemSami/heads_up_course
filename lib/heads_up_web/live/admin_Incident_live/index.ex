@@ -1,6 +1,5 @@
 defmodule HeadsUpWeb.AdminIncidentLive.Index do
   use HeadsUpWeb, :live_view
-  alias HeadsUp.Incidents
   alias HeadsUp.Admin
   import HeadsUpWeb.CustomComponents
 
@@ -20,15 +19,24 @@ defmodule HeadsUpWeb.AdminIncidentLive.Index do
         <.header>
           {@page_title}
           <:actions>
-            <.link navigate={~p"/admin/incidents/new"} class="button">
-              New Incident
-            </.link>
+            <.button variant="primary" navigate={~p"/admin/incidents/new"}>
+              <.icon name="hero-plus" /> New Incident
+            </.button>
           </:actions>
         </.header>
-        <.table id="incidents" rows={@streams.incidents}>
+        <.table
+          id="incidents"
+          rows={@streams.incidents}
+          row_click={fn {_dom_id, incident} -> JS.navigate(~p"/incidents/#{incident}") end}
+        >
           <:col :let={{_dom_id, incident}} label="Name">
             <.link navigate={~p"/incidents/#{incident}"}>
               {incident.name}
+            </.link>
+          </:col>
+          <:col :let={{_dom_id, incident}} label="Category">
+            <.link navigate={~p"/incidents/#{incident}"}>
+              {incident.category.name}
             </.link>
           </:col>
           <:col :let={{_dom_id, incident}} label="Status">
@@ -43,8 +51,11 @@ defmodule HeadsUpWeb.AdminIncidentLive.Index do
               Edit
             </.link>
           </:action>
-          <:action :let={{_dom_id, incident}}>
-            <.link phx-click="delete" phx-value-id={incident.id} data-confirm="Are you sure?">
+          <:action :let={{dom_id, incident}}>
+            <.link
+              phx-click={delete_and_hide(dom_id, incident)}
+              data-confirm="Are you sure?"
+            >
               <.icon name="hero-trash" class="h-4 w-4" />
             </.link>
           </:action>
@@ -63,5 +74,10 @@ defmodule HeadsUpWeb.AdminIncidentLive.Index do
     # need to delete the incident from the stream item
     socket = stream_delete(socket, :incidents, incident)
     {:noreply, socket}
+  end
+
+  def delete_and_hide(dom_id, incident) do
+    JS.push("delete", value: %{id: incident.id})
+    |> JS.hide(to: "##{dom_id}", transition: "fade-out")
   end
 end
