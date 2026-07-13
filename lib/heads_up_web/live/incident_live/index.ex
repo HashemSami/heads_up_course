@@ -4,11 +4,14 @@ defmodule HeadsUpWeb.IncidentLive.Index do
   import HeadsUpWeb.CustomComponents
   alias HeadsUp.Incidents
   alias HeadsUp.Incidents.Incident
+  alias HeadsUp.Categories
 
   def mount(_params, _session, socket) do
     socket =
       socket
       |> assign(:page_title, "Incidents")
+      |> assign(:status_options, Incidents.git_status_options())
+      |> assign(:category_options, Categories.category_names_and_slugs())
 
     # socket =
     #   attach_hook(socket, :log_stream, :handle_event, fn
@@ -47,7 +50,11 @@ defmodule HeadsUpWeb.IncidentLive.Index do
           </:tagline>
         </.head_line>
 
-        <.filter_form form={@form} />
+        <.filter_form
+          form={@form}
+          status_options={@status_options}
+          category_options={@category_options}
+        />
 
         <div class="incidents" id="incidents" phx-update="stream">
           <div id="empty" class="no-results only:block hidden">
@@ -70,9 +77,15 @@ defmodule HeadsUpWeb.IncidentLive.Index do
       <.input field={@form[:q]} placeholder="Search..." autocomplete="off" phx-debounce="1000" />
       <.input
         type="select"
+        field={@form[:category]}
+        prompt="Category"
+        options={@category_options}
+      />
+      <.input
+        type="select"
         field={@form[:status]}
         prompt="Status"
-        options={Incidents.git_status_options()}
+        options={@status_options}
       />
       <.input
         type="select"
@@ -81,7 +94,8 @@ defmodule HeadsUpWeb.IncidentLive.Index do
         options={[
           "Priority: High to low": "priority_asc",
           "Priority: Low to high": "priority_desc",
-          Name: "name"
+          Name: "name",
+          Category: "category"
         ]}
       />
 
@@ -118,7 +132,7 @@ defmodule HeadsUpWeb.IncidentLive.Index do
   def handle_event("filter", params, socket) do
     params =
       params
-      |> Map.take(~w(q status sort_by))
+      |> Map.take(~w(q status sort_by category))
       |> Map.reject(fn {_, v} -> v == "" end)
 
     # push navigate will render a new live view with different process and PID
