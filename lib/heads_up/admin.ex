@@ -21,7 +21,7 @@ defmodule HeadsUp.Admin do
     # |> where(id: ^id)
     # |> Repo.one!()
 
-    Repo.get(Incident, id)
+    Repo.get!(Incident, id)
   end
 
   def update_incident(%Incident{} = incident, attrs) do
