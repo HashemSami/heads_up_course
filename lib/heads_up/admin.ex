@@ -16,6 +16,14 @@ defmodule HeadsUp.Admin do
     |> Repo.insert()
   end
 
+  def get_incident!(id) do
+    # Incident
+    # |> where(id: ^id)
+    # |> Repo.one!()
+
+    Repo.get!(Incident, id)
+  end
+
   def get_incident(id) do
     # Incident
     # |> where(id: ^id)
