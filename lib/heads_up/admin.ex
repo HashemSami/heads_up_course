@@ -16,12 +16,15 @@ defmodule HeadsUp.Admin do
     |> Repo.insert()
   end
 
-  def get_incident!(id) do
+  def get_incident(id) do
     # Incident
     # |> where(id: ^id)
     # |> Repo.one!()
 
-    Repo.get!(Incident, id)
+    case Repo.get(Incident, id) do
+      nil -> {:error, :not_found}
+      incident -> {:ok, incident}
+    end
   end
 
   def update_incident(%Incident{} = incident, attrs) do
