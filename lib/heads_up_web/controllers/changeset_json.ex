@@ -1,10 +1,12 @@
 defmodule HeadsUpWeb.ChangesetJSON do
+  import HeadsUpWeb.CoreComponents, only: [translate_error: 1]
+
   @doc """
   Renders changeset errors.
   """
   def error(%{changeset: changeset}) do
     # When encoded, the changeset returns its errors
     # as a JSON object. So we just pass it forward.
-    %{errors: Ecto.Changeset.traverse_errors(changeset, fn {msg, _} -> msg end)}
+    %{errors: Ecto.Changeset.traverse_errors(changeset, &translate_error/1)}
   end
 end
