@@ -33,6 +33,8 @@ defmodule HeadsUpWeb.UserLive.Registration do
             phx-mounted={JS.focus()}
           />
 
+          <.input field={@form[:username]} label="Username" required />
+
           <.button phx-disable-with="Creating account..." class="btn btn-primary w-full">
             Create an account
           </.button>
