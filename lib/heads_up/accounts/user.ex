@@ -35,6 +35,9 @@ defmodule HeadsUp.Accounts.User do
     changeset
     |> validate_required([:username])
     |> validate_length(:username, min: 2, max: 25)
+    |> validate_format(:username, ~r/^[a-zA-Z0-9_-]+$/,
+      message: "username can only contain letters, numbers, underscores, and hyphens."
+    )
     |> unique_constraint(:username)
   end
 

@@ -21,7 +21,7 @@ defmodule HeadsUpWeb.Router do
   def spy(conn, _opts) do
     answer = ~w(Yes No Maybe) |> Enum.random()
     conn = assign(conn, :answer, answer)
-    # IO.inspect(conn)
+    IO.inspect(conn)
     conn
   end
 
@@ -35,6 +35,10 @@ defmodule HeadsUpWeb.Router do
     live "/", IncidentLive.Index
     live "/incidents", IncidentLive.Index
     live "/incidents/:id", IncidentLive.Show
+  end
+
+  scope "/", HeadsUpWeb do
+    pipe_through [:browser, :require_authenticated_user]
 
     live "/admin/incidents", AdminIncidentLive.Index
     live "/admin/incidents/new", AdminIncidentLive.Form, :new
