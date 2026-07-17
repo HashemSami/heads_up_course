@@ -11,11 +11,11 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: heads_up_dev
 
-#   adminer:
-#     image: adminer
-#     restart: always
-#     environment:
-#       ADMINER_DESIGN: dracula # Pick a theme - https://github.com/vrana/adminer/tree/master/designs
-#     ports:
-#       - 3333:8080
-# # docker compose -f docker-compose.yml -f docker-compose.production.yml up --build
+  adminer:
+    image: adminer
+    restart: always
+    environment:
+      ADMINER_DESIGN: dracula # Pick a theme - https://github.com/vrana/adminer/tree/master/designs
+    ports:
+      - 3333:8080
+# docker compose -f docker-compose.yml -f docker-compose.production.yml up --build
