@@ -294,4 +294,10 @@ defmodule HeadsUp.Accounts do
       end
     end)
   end
+
+  def promote_to_admin(%User{} = user) do
+    user
+    |> Ecto.Changeset.change(%{is_admin: true})
+    |> Repo.update()
+  end
 end
