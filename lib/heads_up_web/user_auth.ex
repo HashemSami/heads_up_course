@@ -230,7 +230,7 @@ defmodule HeadsUpWeb.UserAuth do
     end
   end
 
-  def on_mount(:require_admin, _params, session, socket) do
+  def on_mount(:require_admin, _params, _session, socket) do
     if socket.assigns.current_scope.user.is_admin do
       {:cont, socket}
     else

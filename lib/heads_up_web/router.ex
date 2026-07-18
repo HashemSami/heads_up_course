@@ -35,6 +35,10 @@ defmodule HeadsUpWeb.Router do
     live "/", IncidentLive.Index
     live "/incidents", IncidentLive.Index
     live "/incidents/:id", IncidentLive.Show
+
+    # live_session :require_scope,
+    #   on_mount: {HeadsUpWeb.UserAuth, :mount_current_scope} do
+    # end
   end
 
   scope "/", HeadsUpWeb do
