@@ -54,15 +54,21 @@ defmodule HeadsUpWeb.IncidentLive.Show do
           <div class="left">
             <div :if={@incident.status == :pending}>
               <%= if @current_scope do %>
-                <.form for={@form} id="ticket-form">
-                  <.input field={@form[:comment]} placeholder="Comment..." autofocus />
+                <.form for={@form} id="response-form">
+                  <.input
+                    field={@form[:status]}
+                    type="select"
+                    prompt="Choose a status"
+                    options={[:enroute, :arrived, :departed]}
+                  />
+                  <.input field={@form[:note]} type="textarea" placeholder="Note..." autofocus />
                   <button class="btn btn-primary">
-                    Get a ticket
+                    Post
                   </button>
                 </.form>
               <% else %>
                 <.link href={~p"/users/log-in"} class="button">
-                  Log in to get a ticket
+                  Log In to Post
                 </.link>
               <% end %>
             </div>
