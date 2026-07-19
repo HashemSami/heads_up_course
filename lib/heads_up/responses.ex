@@ -8,6 +8,7 @@ defmodule HeadsUp.Responses do
 
   alias HeadsUp.Responses.Response
   alias HeadsUp.Accounts.Scope
+  alias HeadsUp.Incidents.Incident
 
   @doc """
   Subscribes to scoped notifications about any response changes.
@@ -74,9 +75,9 @@ defmodule HeadsUp.Responses do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_response(%Scope{} = scope, attrs) do
+  def create_response(%Scope{} = scope, %Incident{} = incident, attrs) do
     with {:ok, response = %Response{}} <-
-           %Response{}
+           %Response{incident: incident}
            |> Response.changeset(attrs, scope)
            |> Repo.insert() do
       broadcast_response(scope, {:created, response})

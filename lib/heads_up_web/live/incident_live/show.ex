@@ -1,13 +1,18 @@
 defmodule HeadsUpWeb.IncidentLive.Show do
   use HeadsUpWeb, :live_view
   alias HeadsUp.Incidents
+  alias HeadsUp.Responses
+  alias HeadsUp.Responses.Response
   import HeadsUpWeb.CustomComponents
 
   on_mount {HeadsUpWeb.UserAuth, :mount_current_scope}
 
   def mount(_params, _session, socket) do
+    %{current_scope: scope} = socket.assigns
+    changeset = Responses.change_response(scope, %Response{})
+
     socket =
-      socket |> assign(:form, to_form(%{}))
+      socket |> assign(:form, to_form(changeset))
 
     {:ok, socket}
   end
@@ -54,7 +59,7 @@ defmodule HeadsUpWeb.IncidentLive.Show do
           <div class="left">
             <div :if={@incident.status == :pending}>
               <%= if @current_scope do %>
-                <.form for={@form} id="response-form">
+                <.form for={@form} id="response-form" phx-change="validate" phx-submit="save">
                   <.input
                     field={@form[:status]}
                     type="select"
@@ -107,6 +112,37 @@ defmodule HeadsUpWeb.IncidentLive.Show do
       </.async_result>
     </section>
     """
+  end
+
+  def handle_event("validate", %{"response" => response_params}, socket) do
+    %{current_scope: scope} = socket.assigns
+    changeset = Responses.change_response(scope, %Response{}, response_params)
+
+    socket =
+      socket
+      |> assign(:form, to_form(changeset, action: :validate))
+
+    {:noreply, socket}
+  end
+
+  def handle_event("save", %{"response" => response_params}, socket) do
+    %{incident: incident, current_scope: scope} = socket.assigns
+
+    case Responses.create_response(scope, incident, response_params) do
+      {:ok, _response} ->
+        changeset = Responses.change_response(scope, %Response{})
+
+        socket =
+          assign(socket, :form, to_form(changeset))
+
+        {:noreply, socket}
+
+      {:error, changeset} ->
+        socket =
+          assign(socket, :form, to_form(changeset, action: :validate))
+
+        {:noreply, socket}
+    end
   end
 
   # def urgent_incidents(assigns) do
