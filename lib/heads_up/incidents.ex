@@ -17,6 +17,17 @@ defmodule HeadsUp.Incidents do
     |> Repo.preload(:category)
   end
 
+  def list_responses(%Incident{} = incident) do
+    # Repo.get!(Incident, incident)
+    # |> Repo.preload(:responses)
+
+    incident
+    |> Ecto.assoc(:responses)
+    |> preload(:user)
+    |> order_by(desc: :inserted_at)
+    |> Repo.all()
+  end
+
   def filter_incidents(filter) do
     Incident
     |> with_status(filter["status"])

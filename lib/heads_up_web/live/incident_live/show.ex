@@ -8,21 +8,27 @@ defmodule HeadsUpWeb.IncidentLive.Show do
   on_mount {HeadsUpWeb.UserAuth, :mount_current_scope}
 
   def mount(_params, _session, socket) do
-    %{current_scope: scope} = socket.assigns
-    changeset = Responses.change_response(scope, %Response{})
-
-    socket =
-      socket |> assign(:form, to_form(changeset))
+    socket = add_form(socket, socket.assigns.current_scope)
 
     {:ok, socket}
   end
 
+  defp add_form(socket, %{user: user} = scope) do
+    changeset = Responses.change_response(scope, %Response{user_id: user.id})
+    socket |> assign(:form, to_form(changeset))
+  end
+
+  defp add_form(socket, _), do: socket
+
   def handle_params(%{"id" => id}, _uri, socket) do
     incident = Incidents.get_incident!(id)
+
+    responses = Incidents.list_responses(incident)
 
     socket =
       socket
       |> assign(incident: incident)
+      |> stream(:responses, responses)
       |> assign(page_title: incident.name)
       # |> assign(:urgent_incidents, Incidents.urgent_incidents(incident))
       |> assign_async(:urgent_incidents, fn ->
@@ -114,9 +120,25 @@ defmodule HeadsUpWeb.IncidentLive.Show do
     """
   end
 
+  attr :id, :string, required: true
+  attr :response, Response, required: true
+
+  def response(assigns) do
+    ~H"""
+    <div class="response" id={@id}>
+      <span class="timeline"></span>
+      <section>
+        <div class=""></div>
+      </section>
+    </div>
+    """
+  end
+
   def handle_event("validate", %{"response" => response_params}, socket) do
     %{current_scope: scope} = socket.assigns
-    changeset = Responses.change_response(scope, %Response{}, response_params)
+
+    changeset =
+      Responses.change_response(scope, %Response{user_id: scope.user.id}, response_params)
 
     socket =
       socket
@@ -130,7 +152,7 @@ defmodule HeadsUpWeb.IncidentLive.Show do
 
     case Responses.create_response(scope, incident, response_params) do
       {:ok, _response} ->
-        changeset = Responses.change_response(scope, %Response{})
+        changeset = Responses.change_response(scope, %Response{user_id: scope.user.id})
 
         socket =
           assign(socket, :form, to_form(changeset))
@@ -144,25 +166,25 @@ defmodule HeadsUpWeb.IncidentLive.Show do
         {:noreply, socket}
     end
   end
-
-  # def urgent_incidents(assigns) do
-  #   ~H"""
-  #   <section>
-  #     <h4>Urgent Incidents</h4>
-  #     <div :if={@incidents.loading} class="loading">
-  #       <div class="spinner"></div>
-  #     </div>
-  #     <div :if={@incidents.failed} class="failed">
-  #       Async failed
-  #     </div>
-  #     <ul :if={@incidents.ok?} class="incidents">
-  #       <li :for={incident <- @incidents.result}>
-  #         <.link navigate={~p"/incidents/#{incident.id}"}>
-  #           <img src={incident.image_path} alt="" /> {incident.name}
-  #         </.link>
-  #       </li>
-  #     </ul>
-  #   </section>
-  #   """
-  # end
 end
+
+# def urgent_incidents(assigns) do
+#   ~H"""
+#   <section>
+#     <h4>Urgent Incidents</h4>
+#     <div :if={@incidents.loading} class="loading">
+#       <div class="spinner"></div>
+#     </div>
+#     <div :if={@incidents.failed} class="failed">
+#       Async failed
+#     </div>
+#     <ul :if={@incidents.ok?} class="incidents">
+#       <li :for={incident <- @incidents.result}>
+#         <.link navigate={~p"/incidents/#{incident.id}"}>
+#           <img src={incident.image_path} alt="" /> {incident.name}
+#         </.link>
+#       </li>
+#     </ul>
+#   </section>
+#   """
+# end
