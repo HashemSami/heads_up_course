@@ -81,7 +81,7 @@ defmodule HeadsUp.Responses do
            |> Response.changeset(attrs, scope)
            |> Repo.insert() do
       broadcast_response(scope, {:created, response})
-      {:ok, response}
+      {:ok, Repo.preload(response, :user)}
     end
   end
 
@@ -144,5 +144,12 @@ defmodule HeadsUp.Responses do
     true = response.user_id == scope.user.id
 
     Response.changeset(response, attrs, scope)
+  end
+
+  def preload_user(%Response{} = response) do
+    # Repo.get!(Response, response) |> Repo.preload(:user)
+
+    response
+    |> Repo.preload(:user)
   end
 end

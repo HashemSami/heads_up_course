@@ -29,6 +29,7 @@ defmodule HeadsUpWeb.IncidentLive.Show do
       socket
       |> assign(incident: incident)
       |> stream(:responses, responses)
+      |> assign(:response_count, Enum.count(responses))
       |> assign(page_title: incident.name)
       # |> assign(:urgent_incidents, Incidents.urgent_incidents(incident))
       |> assign_async(:urgent_incidents, fn ->
@@ -56,6 +57,9 @@ defmodule HeadsUpWeb.IncidentLive.Show do
                 Priority {@incident.priority}
               </div>
             </header>
+            <div class="totals">
+              {@response_count} Responses
+            </div>
             <div class="description">
               {@incident.description}
             </div>
@@ -82,6 +86,13 @@ defmodule HeadsUpWeb.IncidentLive.Show do
                   Log In to Post
                 </.link>
               <% end %>
+            </div>
+            <div id="responses" phx-update="stream">
+              <.response
+                :for={{dom_id, response} <- @streams.responses}
+                id={dom_id}
+                response={response}
+              />
             </div>
           </div>
           <div class="right">
@@ -128,7 +139,22 @@ defmodule HeadsUpWeb.IncidentLive.Show do
     <div class="response" id={@id}>
       <span class="timeline"></span>
       <section>
-        <div class=""></div>
+        <div class="avatar">
+          <.icon name="hero-user-solid" />
+        </div>
+
+        <div>
+          <span class="username">
+            {@response.user.username}
+          </span>
+          <span>
+            {@response.status}
+          </span>
+
+          <blockquote>
+            {@response.note}
+          </blockquote>
+        </div>
       </section>
     </div>
     """
@@ -151,12 +177,20 @@ defmodule HeadsUpWeb.IncidentLive.Show do
     %{incident: incident, current_scope: scope} = socket.assigns
 
     case Responses.create_response(scope, incident, response_params) do
-      {:ok, _response} ->
+      {:ok, response} ->
         changeset = Responses.change_response(scope, %Response{user_id: scope.user.id})
 
-        socket =
-          assign(socket, :form, to_form(changeset))
+        # response = Responses.preload_user(response)
+        IO.inspect(socket.assigns.streams.responses)
 
+        socket =
+          socket
+          |> assign(:form, to_form(changeset))
+          # at 0 will put the item on top of the stream
+          |> stream_insert(:responses, response, at: 0)
+          |> update(:response_count, &(&1 + 1))
+
+        IO.inspect(socket.assigns.streams.responses)
         {:noreply, socket}
 
       {:error, changeset} ->
