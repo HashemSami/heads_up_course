@@ -80,8 +80,9 @@ defmodule HeadsUp.Responses do
            %Response{incident: incident}
            |> Response.changeset(attrs, scope)
            |> Repo.insert() do
+      response = Repo.preload(response, :user)
       broadcast_response(scope, {:created, response})
-      {:ok, Repo.preload(response, :user)}
+      {:ok, response}
     end
   end
 

@@ -21,6 +21,10 @@ defmodule HeadsUpWeb.IncidentLive.Show do
   defp add_form(socket, _), do: socket
 
   def handle_params(%{"id" => id}, _uri, socket) do
+    if connected?(socket) do
+      Incidents.subscribe(id)
+    end
+
     incident = Incidents.get_incident!(id)
 
     responses = Incidents.list_responses(incident)
