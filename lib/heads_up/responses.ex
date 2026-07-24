@@ -4,6 +4,7 @@ defmodule HeadsUp.Responses do
   """
 
   import Ecto.Query, warn: false
+  alias HeadsUp.Incidents
   alias HeadsUp.Repo
 
   alias HeadsUp.Responses.Response
@@ -82,6 +83,7 @@ defmodule HeadsUp.Responses do
            |> Repo.insert() do
       response = Repo.preload(response, :user)
       broadcast_response(scope, {:created, response})
+      Incidents.broadcast_response_update(incident.id, response)
       {:ok, response}
     end
   end

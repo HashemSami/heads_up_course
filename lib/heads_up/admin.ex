@@ -1,4 +1,5 @@
 defmodule HeadsUp.Admin do
+  alias HeadsUp.Incidents
   alias HeadsUp.Repo
   alias HeadsUp.Incidents.Incident
   import Ecto.Query
@@ -36,9 +37,16 @@ defmodule HeadsUp.Admin do
   end
 
   def update_incident(%Incident{} = incident, attrs) do
-    incident
-    |> Incident.changeset(attrs)
-    |> Repo.update()
+    with {:ok, %Incident{} = incident} <-
+           incident
+           |> Incident.changeset(attrs)
+           |> Repo.update() do
+      # it is efficint before we broadcast a message to preload the data needed for the message
+      # instead of preloading the data on all the subscribers pages
+      incident = Repo.preload(incident, :category)
+      Incidents.broadcast_incident_update(incident.id, incident)
+      {:ok, incident}
+    end
   end
 
   def delete_incident(%Incident{} = incident) do

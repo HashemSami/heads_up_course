@@ -22,7 +22,7 @@ defmodule HeadsUpWeb.IncidentLive.Show do
 
   def handle_params(%{"id" => id}, _uri, socket) do
     if connected?(socket) do
-      Incidents.subscribe(id)
+      Incidents.subscribe_to_incident(id)
     end
 
     incident = Incidents.get_incident!(id)
@@ -181,18 +181,14 @@ defmodule HeadsUpWeb.IncidentLive.Show do
     %{incident: incident, current_scope: scope} = socket.assigns
 
     case Responses.create_response(scope, incident, response_params) do
-      {:ok, response} ->
+      {:ok, _response} ->
         changeset = Responses.change_response(scope, %Response{user_id: scope.user.id})
 
         # response = Responses.preload_user(response)
-        IO.inspect(socket.assigns.streams.responses)
 
         socket =
           socket
           |> assign(:form, to_form(changeset))
-          # at 0 will put the item on top of the stream
-          |> stream_insert(:responses, response, at: 0)
-          |> update(:response_count, &(&1 + 1))
 
         IO.inspect(socket.assigns.streams.responses)
         {:noreply, socket}
@@ -204,25 +200,18 @@ defmodule HeadsUpWeb.IncidentLive.Show do
         {:noreply, socket}
     end
   end
-end
 
-# def urgent_incidents(assigns) do
-#   ~H"""
-#   <section>
-#     <h4>Urgent Incidents</h4>
-#     <div :if={@incidents.loading} class="loading">
-#       <div class="spinner"></div>
-#     </div>
-#     <div :if={@incidents.failed} class="failed">
-#       Async failed
-#     </div>
-#     <ul :if={@incidents.ok?} class="incidents">
-#       <li :for={incident <- @incidents.result}>
-#         <.link navigate={~p"/incidents/#{incident.id}"}>
-#           <img src={incident.image_path} alt="" /> {incident.name}
-#         </.link>
-#       </li>
-#     </ul>
-#   </section>
-#   """
-# end
+  def handle_info({:response_created, response}, socket) do
+    socket =
+      socket
+      # at 0 will put the item on top of the stream
+      |> stream_insert(:responses, response, at: 0)
+      |> update(:response_count, &(&1 + 1))
+
+    {:noreply, socket}
+  end
+
+  def handle_info({:incident_updated, incident}, socket) do
+    {:noreply, assign(socket, :incident, incident)}
+  end
+end

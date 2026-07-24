@@ -3,12 +3,20 @@ defmodule HeadsUp.Incidents do
   alias __MODULE__.Incident
   import Ecto.Query
 
-  def subscribe(incident_id) do
-    Phoenix.PubSub.subscribe(HeadsUp.PubSub, "incident:#{incident_id}")
+  @pubsub HeadsUp.PubSub
+
+  defp incident_topic(incident_id), do: "incidents:#{incident_id}"
+
+  def subscribe_to_incident(incident_id) do
+    Phoenix.PubSub.subscribe(@pubsub, incident_topic(incident_id))
   end
 
-  def broadcast(incident_id, message) do
-    Phoenix.PubSub.broadcast(HeadsUp.PubSub, "incident:#{incident_id}", message)
+  def broadcast_response_update(incident_id, response) do
+    Phoenix.PubSub.broadcast(@pubsub, incident_topic(incident_id), {:response_created, response})
+  end
+
+  def broadcast_incident_update(incident_id, incident) do
+    Phoenix.PubSub.broadcast(@pubsub, incident_topic(incident_id), {:incident_updated, incident})
   end
 
   def list_incidents do
